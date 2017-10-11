@@ -147,7 +147,7 @@ let test_join man dim numc =
 
 
  
-let test man dim numc =
+let test_meet man dim numc =
   let env = create_env dim in
   let o = random_oct dim numc in
   let lincons = Parser.lincons1_of_lstring env (List.map oct_to_string o) in
@@ -192,7 +192,7 @@ let _ =
        let numcs = _build_nums 10 (fun i -> i + 10) (2*d) in
        List.iter
          (fun numc ->
-            (* let f () = test man d numc in *)
+            (* let f () = test_meet man d numc in *)
             let f () = test_join man d numc in
             Printf.printf "-----------------------------------------------------------\n";
             let sum = iter f numreps in
