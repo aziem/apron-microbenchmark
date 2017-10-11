@@ -161,7 +161,7 @@ let test_join man dim numc =
 
 
  
-let test_meet man dim numc =
+let test_meet_lincons_array man dim numc =
   let env = create_env dim in
   let o = random_oct dim numc in
   let lincons = Parser.lincons1_of_lstring env (List.map oct_to_string o) in
@@ -178,17 +178,43 @@ let test_meet man dim numc =
   time
 
 
+let test_meet man dim numc = 
+  let env = create_env dim in
+  let o = random_oct dim numc in
+  let lincons = Parser.lincons1_of_lstring env (List.map oct_to_string o) in
+  let oct = Abstract1.of_lincons_array man env lincons in
+  let newo = random_oct dim 10 in
+  let newlincons = Parser.lincons1_of_lstring env (List.map oct_to_string newo) in
+  let oct2 = Abstract1.of_lincons_array man env newlincons in
+
+  let t1 = Unix.gettimeofday () in
+  let newo = Abstract1.meet man oct oct2 in
+  let t2 = Unix.gettimeofday () in
+
+  let time = t2 -. t1 in
+  print_time dim numc time (satmsg man newo);
+  time
+
+
+
+
 
 let test_init_opt = ref false
 let test_join_opt = ref false
+let test_meet_lincons_array_opt = ref false
 let test_meet_opt = ref false
 
 let _ =
+  Random.init 0;
+
+  let man = Oct.manager_alloc () in
+  let numreps = 10 in
 
   let spec =
     [("-init", Arg.Set test_init_opt, "Test octagon initialisation");
      ("-join", Arg.Set test_join_opt, "Test octagon join");
-     ("-meet", Arg.Set test_meet_opt, "Test octagon meet")]
+     ("-meetlinconsarray", Arg.Set test_meet_lincons_array_opt, "Test octagon meet");
+     ("-meet", Arg.Set test_meet_opt, "Test octagon meet2")]
   in
   (* Build a list of numbers from start to stop 
      Jump is a function int -> int  *)
@@ -209,9 +235,6 @@ let _ =
     _iter n
   in
 
-  let man = Oct.manager_alloc () in
-  let numreps = 10 in
-
   let run_experiment test_func = 
     let dims = _build_nums 5 (fun i -> i + 10) 80 in
     List.iter
@@ -226,6 +249,7 @@ let _ =
               Printf.printf "-----------------------------------------------------------\n"; flush stdout
            ) numcs) dims
   in
+
   Arg.parse spec print_endline "Hello";
   if (!test_init_opt) then
     begin
@@ -241,7 +265,14 @@ let _ =
     begin
       Printf.printf "Running octagon meet microbenchmarks\n"; flush stdout;
       run_experiment test_meet
+    end;
+  if (!test_meet_lincons_array_opt) then
+    begin
+      Printf.printf "Running octagon meet2 microbenchmarks\n"; flush stdout;
+      run_experiment test_meet_lincons_array
     end
+
+
   
       
   
