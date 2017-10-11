@@ -213,8 +213,8 @@ let _ =
   let spec =
     [("-init", Arg.Set test_init_opt, "Test octagon initialisation");
      ("-join", Arg.Set test_join_opt, "Test octagon join");
-     ("-meetlinconsarray", Arg.Set test_meet_lincons_array_opt, "Test octagon meet");
-     ("-meet", Arg.Set test_meet_opt, "Test octagon meet2")]
+     ("-meetlinconsarray", Arg.Set test_meet_lincons_array_opt, "Test octagon meet with lincons array");
+     ("-meet", Arg.Set test_meet_opt, "Test octagon meet")]
   in
   (* Build a list of numbers from start to stop 
      Jump is a function int -> int  *)
@@ -250,7 +250,7 @@ let _ =
            ) numcs) dims
   in
 
-  Arg.parse spec print_endline "Hello";
+  Arg.parse spec print_endline "Apron Library Microbenchmarking tool";
   if (!test_init_opt) then
     begin
       Printf.printf "Running octagon init microbenchmarks\n"; flush stdout;
