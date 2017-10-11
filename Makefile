@@ -1,10 +1,10 @@
 OCB_FLAGS = -use-ocamlfind
 OCB = ocamlbuild $(OCB_FLAGS)
 
-all: mlbenchmark.native
+all: apronbenchmark.native
 
-mlbenchmark.native: mlbenchmark.ml
-	$(OCB) mlbenchmark.native
+apronbenchmark.native: apronbenchmark.ml
+	$(OCB) apronbenchmark.native
 
 clean: 
 	$(OCB) -clean 
