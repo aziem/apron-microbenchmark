@@ -1,0 +1,9 @@
+#+TITLE: Apron microbenchmarking tool
+#+AUTHOR: Aziem Chawdhary
+
+Simple OCaml program to microbenchmark functions from the Apron domain. 
+At the moment we focus on the meet operation. 
+
+Generates a SAT octagon, then generates a number of linear constraints
+to apply with meet. At the moment the the generated octagons are SAT
+at the end. 
