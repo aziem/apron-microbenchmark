@@ -94,7 +94,53 @@ let create_env numc =
   in
   Environment.make (Array.of_list (_create_vars numc)) [||]
 
+(* SYNTAX PARSE ERROR IN THIS ONE *)
+(* let test_linexpr man dim numc =
+ *   let env = create_env dim in
+ *   let o = random_oct dim numc in
+ *   let lincons = Parser.lincons1_of_lstring env (List.map oct_to_string o) in
+ *   let oct = Abstract1.of_lincons_array man env lincons in
+ *   let newo = random_oct dim 10 in
+ *   (\* let t = List.fold_left (fun str o -> str ^ ";" ^ (oct_to_string o)) "" newo in *\)
+ *   let newlincons = Array.of_list ( List.map (fun o -> oct_to_string o |> Parser.linexpr1_of_string env) newo) in
+ *   (\* let newlincons = Parser.linexpr1_of_string env t in *\)
+ *   let vars = fst (Environment.vars env) in
+ *   let t1 = Unix.gettimeofday () in
+ *   let newo = Abstract1.assign_linexpr_array man oct vars newlincons None in
+ *   let t2 = Unix.gettimeofday () in
+ *   let satmsg =
+ *     if (Abstract1.is_top man newo) then
+ *       "FINAL_UNSAT"
+ *     else
+ *       "FINAL_SAT"
+ *   in
+ *   Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc (t2 -. t1) satmsg;
+ *   t2 -. t1 *)
 
+
+
+let test_join man dim numc = 
+  let env = create_env dim in
+  let o = random_oct dim numc in
+  let lincons = Parser.lincons1_of_lstring env (List.map oct_to_string o) in
+  let oct = Abstract1.of_lincons_array man env lincons in
+  let newo = random_oct dim 10 in
+  let newlincons = Parser.lincons1_of_lstring env (List.map oct_to_string newo) in
+  let oct2 = Abstract1.of_lincons_array man env newlincons in
+  let t1 = Unix.gettimeofday () in
+  let newo = Abstract1.join man oct oct2 in
+  let t2 = Unix.gettimeofday () in
+
+  let satmsg =
+    if (Abstract1.is_top man newo) then
+      "FINAL_UNSAT"
+    else
+      "FINAL_SAT"
+  in
+  Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc (t2 -. t1) satmsg;
+  t2 -. t1
+
+ 
 let test man dim numc =
   let env = create_env dim in
   let o = random_oct dim numc in
@@ -147,7 +193,8 @@ let _ =
        let numcs = _build_nums 10 (fun i -> i + 10) (2*d) in
        List.iter
          (fun numc ->
-            let f () = test man d numc in
+            (* let f () = test man d numc in *)
+            let f () = test_join man d numc in
             Printf.printf "-----------------------------------------------------------\n";
             let sum = iter f numreps in
             Printf.printf "SUM: %f AVG: %f\n" sum (sum /. (float_of_int numreps));
