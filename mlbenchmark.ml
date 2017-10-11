@@ -118,6 +118,15 @@ let create_env numc =
  *   t2 -. t1 *)
 
 
+let print_time dim numc time satmsg =
+  Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc time satmsg
+
+let satmsg man abs =
+  if (Abstract1.is_top man abs) then
+    "FINAL_UNSAT"
+  else
+    "FINAL_SAT"
+
 
 let test_join man dim numc = 
   let env = create_env dim in
@@ -127,18 +136,15 @@ let test_join man dim numc =
   let newo = random_oct dim 10 in
   let newlincons = Parser.lincons1_of_lstring env (List.map oct_to_string newo) in
   let oct2 = Abstract1.of_lincons_array man env newlincons in
+
   let t1 = Unix.gettimeofday () in
   let newo = Abstract1.join man oct oct2 in
   let t2 = Unix.gettimeofday () in
 
-  let satmsg =
-    if (Abstract1.is_top man newo) then
-      "FINAL_UNSAT"
-    else
-      "FINAL_SAT"
-  in
-  Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc (t2 -. t1) satmsg;
-  t2 -. t1
+  let time = t2 -. t1 in
+  print_time dim numc time (satmsg man newo);
+  time
+
 
  
 let test man dim numc =
@@ -153,14 +159,9 @@ let test man dim numc =
   let newo = Abstract1.meet_lincons_array man oct newlincons in
   let t2 = Unix.gettimeofday () in
 
-  let satmsg =
-    if (Abstract1.is_top man newo) then
-      "FINAL_UNSAT"
-    else
-      "FINAL_SAT"
-  in
-  Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc (t2 -. t1) satmsg;
-  t2 -. t1
+  let time = t2 -. t1 in
+  print_time dim numc time (satmsg man newo);
+  time
 
 let _ =
 
@@ -185,9 +186,7 @@ let _ =
   
   let man = Oct.manager_alloc () in
   let numreps = 10 in
-  let dims = _build_nums 5 (fun i -> i + 10) 40 in
-  List.iter (fun d -> Printf.printf " %d " d) dims;
-
+  let dims = _build_nums 5 (fun i -> i + 10) 80 in
   List.iter
     (fun d ->
        let numcs = _build_nums 10 (fun i -> i + 10) (2*d) in
