@@ -1,1 +1,1 @@
-true: package(gmp), package(apron), package(apron.apron), package(apron.octMPQ)
+true: package(gmp), package(apron), package(apron.apron), package(apron.octMPQ), debug

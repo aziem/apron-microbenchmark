@@ -119,13 +119,27 @@ let create_env numc =
 
 
 let print_time dim numc time satmsg =
-  Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc time satmsg
+  Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc time satmsg;
+  flush stdout
 
 let satmsg man abs =
   if (Abstract1.is_top man abs) then
     "FINAL_UNSAT"
   else
     "FINAL_SAT"
+
+let test_init man dim numc =
+  let env = create_env dim in
+  let o = random_oct dim numc in
+  let lincons = Parser.lincons1_of_lstring env (List.map oct_to_string o) in
+  let t1 = Unix.gettimeofday () in
+  let oct = Abstract1.of_lincons_array man env lincons in
+  let t2 = Unix.gettimeofday () in
+
+  let time = t2 -. t1 in
+  print_time dim numc time (satmsg man oct);
+  time
+
 
 
 let test_join man dim numc = 
@@ -163,8 +177,19 @@ let test_meet man dim numc =
   print_time dim numc time (satmsg man newo);
   time
 
+
+
+let test_init_opt = ref false
+let test_join_opt = ref false
+let test_meet_opt = ref false
+
 let _ =
 
+  let spec =
+    [("-init", Arg.Set test_init_opt, "Test octagon initialisation");
+     ("-join", Arg.Set test_join_opt, "Test octagon join");
+     ("-meet", Arg.Set test_meet_opt, "Test octagon meet")]
+  in
   (* Build a list of numbers from start to stop 
      Jump is a function int -> int  *)
   let rec _build_nums start jump stop =
@@ -183,20 +208,40 @@ let _ =
     in
     _iter n
   in
-  
+
   let man = Oct.manager_alloc () in
   let numreps = 10 in
-  let dims = _build_nums 5 (fun i -> i + 10) 80 in
-  List.iter
-    (fun d ->
-       let numcs = _build_nums 10 (fun i -> i + 10) (2*d) in
-       List.iter
-         (fun numc ->
-            (* let f () = test_meet man d numc in *)
-            let f () = test_join man d numc in
-            Printf.printf "-----------------------------------------------------------\n";
-            let sum = iter f numreps in
-            Printf.printf "SUM: %f AVG: %f\n" sum (sum /. (float_of_int numreps));
-            Printf.printf "-----------------------------------------------------------\n";
-         ) numcs) dims
+
+  let run_experiment test_func = 
+    let dims = _build_nums 5 (fun i -> i + 10) 80 in
+    List.iter
+      (fun d ->
+         let numcs = _build_nums 10 (fun i -> i + 10) (2*d) in
+         List.iter
+           (fun numc ->
+              let f () = test_func man d numc in
+              Printf.printf "-----------------------------------------------------------\n"; flush stdout;
+              let sum = iter f numreps in
+              Printf.printf "SUM: %f AVG: %f\n" sum (sum /. (float_of_int numreps)); flush stdout;
+              Printf.printf "-----------------------------------------------------------\n"; flush stdout
+           ) numcs) dims
+  in
+  Arg.parse spec print_endline "Hello";
+  if (!test_init_opt) then
+    begin
+      Printf.printf "Running octagon init microbenchmarks\n"; flush stdout;
+      run_experiment test_init
+    end;
+  if (!test_join_opt) then
+    begin
+      Printf.printf "Running octagon join microbenchmarks\n"; flush stdout;
+      run_experiment test_join
+    end;
+  if (!test_meet_opt) then
+    begin
+      Printf.printf "Running octagon meet microbenchmarks\n"; flush stdout;
+      run_experiment test_meet
+    end
+  
+      
   
