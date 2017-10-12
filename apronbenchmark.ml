@@ -1,6 +1,9 @@
 open Apron
 open Mpqf
 
+
+let out_channel = ref stdout
+
 type oct_type =
   | PX
   | MX
@@ -119,8 +122,8 @@ let create_env numc =
 
 
 let print_time dim numc time satmsg =
-  Printf.printf "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc time satmsg;
-  flush stdout
+  Printf.fprintf !out_channel "Dimension: %d Num new constraints: %d Time: %f %s\n" dim numc time satmsg;
+  flush !out_channel
 
 let satmsg man abs =
   if (Abstract1.is_top man abs) then
@@ -199,10 +202,12 @@ let test_meet man dim numc =
 
 
 
+
 let test_init_opt = ref false
 let test_join_opt = ref false
 let test_meet_lincons_array_opt = ref false
 let test_meet_opt = ref false
+let file_output_opt = ref false
 
 let _ =
   Random.init 0;
@@ -214,7 +219,8 @@ let _ =
     [("-init", Arg.Set test_init_opt, "Test octagon initialisation");
      ("-join", Arg.Set test_join_opt, "Test octagon join");
      ("-meetlinconsarray", Arg.Set test_meet_lincons_array_opt, "Test octagon meet with lincons array");
-     ("-meet", Arg.Set test_meet_opt, "Test octagon meet")]
+     ("-meet", Arg.Set test_meet_opt, "Test octagon meet");
+     ("-file", Arg.Set file_output_opt, "Output results to a file");]
   in
   (* Build a list of numbers from start to stop 
      Jump is a function int -> int  *)
@@ -243,34 +249,44 @@ let _ =
          List.iter
            (fun numc ->
               let f () = test_func man d numc in
-              Printf.printf "-----------------------------------------------------------\n"; flush stdout;
+              Printf.fprintf !out_channel "-----------------------------------------------------------\n"; flush !out_channel; 
               let sum = iter f numreps in
-              Printf.printf "SUM: %f AVG: %f\n" sum (sum /. (float_of_int numreps)); flush stdout;
-              Printf.printf "-----------------------------------------------------------\n"; flush stdout
+              Printf.fprintf !out_channel "SUM: %f AVG: %f\n" sum (sum /. (float_of_int numreps)); flush !out_channel;
+              Printf.fprintf !out_channel "-----------------------------------------------------------\n"; flush !out_channel
            ) numcs) dims
+  in
+
+  let create_channel =
+    (fun s -> if (!file_output_opt) then out_channel := (open_out s))
   in
 
   Arg.parse spec print_endline "Apron Library Microbenchmarking tool";
   if (!test_init_opt) then
     begin
-      Printf.printf "Running octagon init microbenchmarks\n"; flush stdout;
+      create_channel "init_output.txt";
+      Printf.fprintf !out_channel "Running octagon init microbenchmarks\n"; flush stdout;
       run_experiment test_init
     end;
   if (!test_join_opt) then
     begin
-      Printf.printf "Running octagon join microbenchmarks\n"; flush stdout;
+      create_channel "join_output.txt";
+      Printf.fprintf !out_channel "Running octagon join microbenchmarks\n"; flush stdout;
       run_experiment test_join
     end;
   if (!test_meet_opt) then
     begin
-      Printf.printf "Running octagon meet microbenchmarks\n"; flush stdout;
+      create_channel "meet_output.txt";
+      Printf.fprintf !out_channel "Running octagon meet microbenchmarks\n"; flush stdout;
       run_experiment test_meet
     end;
   if (!test_meet_lincons_array_opt) then
     begin
-      Printf.printf "Running octagon meet2 microbenchmarks\n"; flush stdout;
+      create_channel "meetlincons_output.txt";
+      Printf.fprintf !out_channel "Running octagon meet lincons microbenchmarks\n"; flush stdout;
       run_experiment test_meet_lincons_array
-    end
+    end;
+  if(!file_output_opt) then
+    close_out !out_channel
 
 
   
